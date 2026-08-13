@@ -1,18 +1,9 @@
-# 1. Importing libraries
 import pandas as pd
 import matplotlib.pyplot as plt
 
-
-# 2. Loading datasets
 sentiment = pd.read_csv("fear_greed_index.csv")
 trades = pd.read_csv("historical_data.csv")
 
-
-# 3. Data Cleaning and Preprocessing
-
-# 3. Data Cleaning and Preprocessing
-
-# Rename columns
 sentiment.rename(columns={
     "date": "Date",
     "classification": "Classification"
@@ -25,39 +16,32 @@ trades.rename(columns={
 }, inplace=True)
 
 
-# Convert sentiment dates
 sentiment["Date"] = pd.to_datetime(
     sentiment["Date"],
     errors="coerce"
 )
 
-
-# Convert trade timestamps
 trades["TradeTime"] = pd.to_datetime(
     trades["TradeTime"],
     errors="coerce"
 )
 
-
-# Remove invalid/missing dates
 sentiment = sentiment.dropna(subset=["Date"])
 trades = trades.dropna(subset=["TradeTime"])
 
 
-# Keep only the calendar date
-# normalize() keeps the column as proper pandas datetime
 sentiment["Date"] = sentiment["Date"].dt.normalize()
 trades["Date"] = trades["TradeTime"].dt.normalize()
 
 
-# Check date ranges
+#checking the date ranges of both datasets
 print("\nSentiment date range:")
 print(sentiment["Date"].min(), "to", sentiment["Date"].max())
 
 print("\nTrade date range:")
 print(trades["Date"].min(), "to", trades["Date"].max())
 
-# 4. Merge datasets
+
 df = pd.merge(
     trades,
     sentiment[["Date", "Classification"]],
@@ -66,58 +50,43 @@ df = pd.merge(
 )
 
 
-# 5. Feature Engineering
-
-# Profit/Loss classification
 df["win"] = df["closedPnL"] > 0
-
-
-# Clean missing sentiment values
 df = df.dropna(subset=["Classification"])
 
-
-# 6. Basic Exploration
 
 print("\nDataset Shape:", df.shape)
 
 print("\nSentiment Distribution:")
 print(df["Classification"].value_counts())
 
+#PnL Summary
 print("\nPnL Summary:")
 print(df["closedPnL"].describe())
 
-
-# 7. Analysis by Sentiment
-
-# 7.1 Average PnL
+#average PnL by sentiment classification
 avg_pnl = df.groupby("Classification")["closedPnL"].mean()
-
 print("\nAverage PnL:")
 print(avg_pnl)
 
 
-# 7.2 Total PnL
+#Total PnL
 total_pnl = df.groupby("Classification")["closedPnL"].sum()
-
 print("\nTotal PnL:")
 print(total_pnl)
 
 
-# 7.3 Win Rate
+#win rate
 win_rate = df.groupby("Classification")["win"].mean()
-
 print("\nWin Rate:")
 print(win_rate)
 
 
-# 7.4 Average Trade Size
+#average trade size
 avg_size = df.groupby("Classification")["size"].mean()
 
 print("\nAverage Trade Size:")
 print(avg_size)
 
-
-# 8. Visualisations
 
 # Average PnL
 plt.figure()
@@ -149,9 +118,7 @@ plt.tight_layout()
 plt.show()
 
 
-# 9. Advanced Insights
-
-# Profit distribution
+#distribution of PnL by sentiment classification
 plt.figure()
 df.boxplot(column="closedPnL", by="Classification")
 plt.title("PnL Distribution by Sentiment")
@@ -161,8 +128,6 @@ plt.ylabel("PnL")
 plt.tight_layout()
 plt.show()
 
-
-# 10. Saving Results
 
 summary = pd.DataFrame({
     "Average PnL": avg_pnl,

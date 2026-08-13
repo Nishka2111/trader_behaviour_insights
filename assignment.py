@@ -10,28 +10,52 @@ trades = pd.read_csv("historical_data.csv")
 
 # 3. Data Cleaning and Preprocessing
 
-# Rename columns to simpler names
+# 3. Data Cleaning and Preprocessing
+
+# Rename columns
 sentiment.rename(columns={
     "date": "Date",
     "classification": "Classification"
 }, inplace=True)
 
 trades.rename(columns={
-    "Timestamp": "TradeTime",
+    "Timestamp IST": "TradeTime",
     "Closed PnL": "closedPnL",
     "Size USD": "size"
 }, inplace=True)
 
 
-# Convert dates
-sentiment["Date"] = pd.to_datetime(sentiment["Date"])
-trades["TradeTime"] = pd.to_datetime(trades["TradeTime"])
+# Convert sentiment dates
+sentiment["Date"] = pd.to_datetime(
+    sentiment["Date"],
+    errors="coerce"
+)
 
 
-# Extract only date
-sentiment["Date"] = sentiment["Date"].dt.date
-trades["Date"] = trades["TradeTime"].dt.date
+# Convert trade timestamps
+trades["TradeTime"] = pd.to_datetime(
+    trades["TradeTime"],
+    errors="coerce"
+)
 
+
+# Remove invalid/missing dates
+sentiment = sentiment.dropna(subset=["Date"])
+trades = trades.dropna(subset=["TradeTime"])
+
+
+# Keep only the calendar date
+# normalize() keeps the column as proper pandas datetime
+sentiment["Date"] = sentiment["Date"].dt.normalize()
+trades["Date"] = trades["TradeTime"].dt.normalize()
+
+
+# Check date ranges
+print("\nSentiment date range:")
+print(sentiment["Date"].min(), "to", sentiment["Date"].max())
+
+print("\nTrade date range:")
+print(trades["Date"].min(), "to", trades["Date"].max())
 
 # 4. Merge datasets
 df = pd.merge(
